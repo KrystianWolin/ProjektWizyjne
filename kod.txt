@@ -1,0 +1,82 @@
+using Emgu.CV;
+using Emgu.CV.Structure;
+using System;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace Program_testowy
+{
+    public partial class Form1 : Form
+    {
+        //zmienne globalne
+        Image<Bgr, byte> image1; // <> szablon obiektu, <kolor, głębia koloru(na ilu bitach jest zapisany)
+        VideoCapture camera;
+        
+
+        public Form1()
+        {
+            //Metoda InitializeComponent zawiera kod, który tworzy i inicjuje obiekty interfejsu użytkownika przeciągane na powierzchni formularza
+            //z wartościami dostarczonymi przez Ciebie (programistę) przy użyciu siatki właściwości Projektanta formularzy.
+            //Nie możemy odwoływać się do elementów utworzonych w formularzu przed wywołaniem tej metody.
+            InitializeComponent();
+
+            image1 = new Image<Bgr, byte>(pictureBoxDuzeLewy.Size); //Utwórz pusty obraz o określonym rozmiarze (w nawiasie ustawienie wielkości obrazu w pixelach)
+            
+            try
+            {
+                //Wewnątrz bloku try piszemy kod co, do którego nie jesteśmy pewni ,że zadziała dobrze za każdym możliwym razem.
+
+                camera = new VideoCapture(0); //w nawiasie ustawienie źródła  pobieranego obrazu (0 = pierwsza podpięta kamera)
+                camera.SetCaptureProperty(Emgu.CV.CvEnum.CapProp.FrameWidth, image1.Width); //ustawienie właściwości obrazu z kamery (szerokość)
+                camera.SetCaptureProperty(Emgu.CV.CvEnum.CapProp.FrameHeight, image1.Height); //ustawienie właściwości obrazu z kamery (wysokość)
+            }
+            catch (Exception e) //złąp wyjątek obiektu
+            {
+                //Gdy jakiś fragment kodu wewnątrz bloku 'try' nie wykonał się poprawnie wtedy kod zostaje przerwany i program przeskakuje do bloku catch.
+
+                MessageBox.Show(e.ToString());
+                throw;
+            }
+            
+        }
+
+
+        private void timer1_Tick(object sender, EventArgs e) //funkcja wywoływana przez timer co tyknięcie
+        {
+            //buttonZKameryLewy.PerformClick(); //manualne wywołanie kliknięcia przycisku z kodu
+
+            kamerka(); //wywołanie funkcji pobierającej klatkę z kamery i wyświetlającą ją w pictureBoxDuzeLewy
+            //wywołanie co tick skutkuje wywołaniem klatki co pewien okres czasu (z pewną częstotliwością) = pojawi się film
+
+            buttonWykresLiniiLewy.PerformClick();
+        }
+
+        void kamerka()
+        {
+            Mat temp = camera.QueryFrame(); //klatka obrazu z kamery jest zapisana do temp
+            CvInvoke.Resize(temp, image1, image1.Size); //dopasowanie wejścia temp do wyjścia image1
+            pictureBoxDuzeLewy.Image = image1.Bitmap; //wyświetlenie bitmapy image1 w oknie pictureBoxDuzeLewy
+        }
+
+        //obsłóga timera (samoczynnego odświerzania = wywoływania funkcji z częstotliwością)
+        
+        bool movie = false;
+
+        private void buttonProstyFilm_Click(object sender, EventArgs e) //podgląd live klatek (obrazu) z kamerki
+        {
+            movie = !movie;
+            if (movie)
+            {
+                timer1.Enabled = true;
+                timer1.Start();
+            }
+            else
+            {
+                timer1.Enabled = false;
+                timer1.Stop();
+            }
+        }
+        
+
+    }
+}
